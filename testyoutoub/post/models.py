@@ -1,11 +1,10 @@
-import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.utils.text import slugify
 from django.urls import reverse
 from notifications.models import Notification
-
+import uuid
 
 # Create your models here.
 
@@ -57,28 +56,25 @@ class Follow(models.Model):
         following = models.ForeignKey(User,on_delete=models.CASCADE, null=True, related_name='following')
 
         def user_follow(sender, instance, *args, **kwargs):
-                follow = instance
-                sender = follow.follower
-                following = follow.following
-                notify = Notification(sender=sender, user=following, notification_type=3)
-
-                notify.save()
+            follow = instance
+            sender = follow.follower
+            following = follow.following
+            notify = Notification(sender=sender, user=following, notification_type=3)
+            notify.save()
 
         def user_unfollow(sender, instance, *args, **kwargs):
-                follow = instance
-                sender = follow.follower
-                following = follow.following
+            follow = instance
+            sender = follow.follower
+            following = follow.following
 
-                notify = Notification.objects.filter(sender=sender, user=following, notification_type=3)
-                notify.delete()
+            notify = Notification.objects.filter(sender=sender, user=following, notification_type=3)
+            notify.delete()
 
 class Stream(models.Model):
-                following = models.ForeignKey(User, on_delete=models.CASCADE,null=True, related_name='stream_following')
-                user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-                post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
-                date = models.DateTimeField()
-
+        following = models.ForeignKey(User, on_delete=models.CASCADE,null=True, related_name='stream_following')
+        user = models.ForeignKey(User, on_delete=models.CASCADE)
+        post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
+        date = models.DateTimeField()
         def add_post(sender, instance, *args, **kwargs):
             post = instance
             user = post.user
@@ -86,11 +82,9 @@ class Stream(models.Model):
             for follower in followers:
                 stream = Stream(post=post, user=follower.follower, date=post.posted, following=user)
                 stream.save()
-
 class Likes(models.Model):
         user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_like')
         post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_like')
-
         def user_liked_post(sender, instance, *args, **kwargs):
                 like = instance
                 post = like.post
@@ -115,4 +109,3 @@ post_delete.connect(Likes.user_unlike_post, sender=Likes)
 #Follow
 post_save.connect(Follow.user_follow, sender=Follow)
 post_delete.connect(Follow.user_unfollow, sender=Follow)
-
